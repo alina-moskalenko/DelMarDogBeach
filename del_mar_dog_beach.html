@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Del Mar Dog Beach Live</title>
+    <style>
+      #map {
+        height: 400px;
+        width: 100%;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  </head>
+  <body>
+    <!--make sure it looks okay on mobile as well-->
+
+    <h1>Del Mar Dog Beach Live</h1>
+
+    <div id="map"></div>
+
+    <div>
+      <h2>Current Weather</h2>
+      <div id="currentTemp"></div>
+      <div id="currentCondition"></div>
+    </div>
+
+    <div>
+      <h2>Tide Level</h2>
+      <div id="tide_lvl"></div>
+    </div>
+
+    <div>
+      <h2>Leash Requirements</h2>
+      <div id="leashStatus"></div>
+    </div>
+
+    <!-- <div>
+      <h2>Busy</h2>
+      <div id="busy_lvl"></div>
+    </div> -->
+
+    <script>
+      // MAP
+      // get google map location of dog beach with a marker of del mar dog beach's main entrance
+      function initMap() {
+        const delMarDogBeachLocation = { lat: 32.97202, lng: -117.269621 };
+        let map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 12,
+          center: delMarDogBeachLocation,
+        });
+        let marker = new google.maps.Marker({
+          position: delMarDogBeachLocation,
+          map: map,
+        });
+      }
+
+      //WEATHER
+      //use the long/lat of del mar dog beach in a the Open Weather API to get current tempurature and conditions
+      async function getWeatherData() {
+        const openWeatherAPI =
+          'https://api.openweathermap.org/data/3.0/onecall?lat=32.97202&lon=-117.269621&units=imperial&appid=79f055f473ddf4575cc6a76050d3eb90';
+
+        let weatherData = '';
+        const res = await fetch(openWeatherAPI);
+        const data = await res.json();
+        console.log(data);
+
+        //get the current temperature
+        let currentTemp = data.current.temp;
+        document.getElementById(
+          'currentTemp'
+        ).innerHTML = `The current tempurature is: ${currentTemp}&deg;F`;
+
+        //get the current weather condition (sunny, cloudy, rain, etc)
+        let currentCondition = data.current.weather[0].main;
+        document.getElementById(
+          'currentCondition'
+        ).innerHTML = `The current weather condition: ${currentCondition} `;
+      }
+      getWeatherData();
+
+      //TIDE
+      //find current tide level
+      //get today's high and low tide times as well
+      const lat = 32.97202;
+      const lng = -117.269621;
+      const today = fetch(
+        `https://api.stormglass.io/v2/tide/extremes/point?lat=${lat}&lng=${lng}&start=2019-03-15&end=2019-03-15`,
+        {
+          headers: {
+            Authorization: 'example-api-key',
+          },
+        }
+      )
+        .then((response) => response.json())
+        .then((jsonData) => {
+          console.log(jsonData);
+        });
+
+      // async function getTideLevel() {
+      //   const res = await fetch(tidesAPI);
+      //   const data = await res.json();
+      //   console.log(data);
+
+      // const res = await fetch(tideMeanAPI);
+      // const meanData = await res.json();
+      // console.log(meanData);
+      // let mtl = meanData.data[0].v;
+
+      // const response = await fetch(tideLevelAPI);
+      // const tideData = await response.json();
+      // console.log(tideData);
+      //let currentLevel = tideData.data[0].v;
+
+      // if (currentLvl > mtl) {
+      //   document.getElementById(
+      //     'tide_lvl'
+      //   ).innerHTML = `Current tide is HIGH `;
+      // } else {
+      //   document.getElementById(
+      //     'tide_lvl'
+      //   ).innerHTML = `Current tide is LOW `;
+      // }
+
+      //LEASH STATUS
+      //based on current month/day and lets the user know whether dogs are allowed to be off-leash
+      //let the user know when the on leash season starts
+
+      // format current date to work in function
+      let date = new Date();
+      let currentMonth = date.getMonth();
+      let currentDay = date.getDate();
+      let currentDate = currentMonth + '.' + currentDay;
+
+      // test if current month and date are in peak season or off season to determine o/off-leash status
+      function checkPeakSzn() {
+        if (currentDate > 5.16 && currentDate < 8.4) {
+          document.getElementById('leashStatus').innerHTML =
+            'It is currently PEAK SEASON! Off leash is allowed before till 8AM. After, dogs are required to be on leash everywhere';
+        } else {
+          document.getElementById('leashStatus').innerHTML =
+            'It is currently OFF LEASH season. Let the dogs out! <br> *Peak Season begins again on June 16th';
+        }
+      }
+      checkPeakSzn();
+
+      //...if time permits
+      //BUSY LEVEL
+      //using google maps api for their popular times information
+      //
+    </script>
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWsaGF-OUGwYKBcHOF-d6vL3PN0wE7NSI&callback=initMap"
+    ></script>
+  </body>
+</html>

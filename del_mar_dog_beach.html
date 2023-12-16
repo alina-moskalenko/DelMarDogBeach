@@ -1,12 +1,78 @@
 <!DOCTYPE html>
-<!-- Alina Moskalenko -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Del Mar Dog Beach Live</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: white;
+      }
+      h1,
+      h2 {
+        font-family: 'Noto Sans', sans-serif;
+        color: #212224;
+        -webkit-text-stroke-width: 0.1px;
+        -webkit-text-stroke-color: white;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      p {
+        color: #212224;
+      }
+
+      .container,
+      .item {
+        background-color: #c7e5cf;
+      }
+
+      .container {
+        width: 80%;
+        height: auto;
+        margin: 0 auto;
+        border: 10px solid darkgray;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-evenly;
+        align-items: center;
+        border-radius: 10px;
+      }
+
+      .item {
+        flex-grow: 1;
+        justify-content: center;
+        text-align: center;
+        padding: 1em;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      #map {
+        height: 400px;
+        width: 100%;
+        border-bottom: 10px solid darkgrey;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
   </head>
   <body>
+    <h1>Del Mar Dog Beach Live</h1>
 
-  <h1>Del Mar Dog Beach Live</h1>
-
-  <div class="container">
-    <div id="map"></div>
+    <div class="container">
+      <div id="map"></div>
 
       <div class="item">
         <h2>Current Weather</h2>
@@ -25,8 +91,43 @@
     </div>
 
     <script>
-      // Del Mar Dog Beach latitude and longitude
-      // use the current date (need the beginning of the day time and current time for API)
+      const lat = 32.97202;
+      const lng = -117.269621;
+
+      // MAP
+      // get google map location of dog beach with a marker of del mar dog beach's main entrance
+      function initMap() {
+        const delMarDogBeachLocation = { lat: lat, lng: lng };
+        let map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 12,
+          center: delMarDogBeachLocation,
+        });
+        let marker = new google.maps.Marker({
+          position: delMarDogBeachLocation,
+          map: map,
+        });
+      }
+
+      //WEATHER
+      //use the long/lat of del mar dog beach in a the Open Weather API to get current tempurature and conditions
+      async function getWeatherData() {
+        const openWeatherAPI = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lng}&units=imperial&appid={api-key}`;
+        let weatherData = '';
+        const res = await fetch(openWeatherAPI);
+        const data = await res.json();
+
+        //get the current temperature & current weather condition (sunny, cloudy, rain, etc)
+        let currentTemp = data.current.temp;
+        let currentCondition = data.current.weather[0].main;
+        document.getElementById(
+          'currentWeather'
+        ).innerHTML = `${currentTemp}&deg;F <br> ${currentCondition.toUpperCase()}`;
+      }
+      getWeatherData();
+
+      //TIDE
+      //find current tide level to see how much beach/ground is available to run on
+
       let date = new Date();
       let currentMonth = date.getMonth();
       let currentDay = date.getDate();
@@ -35,7 +136,7 @@
       let currentHours = date.getHours();
       let currentMins = date.getMinutes();
       let currentTime = `${currentHours}:${currentMins}`;
-      
+
       let startDate = `${currentYear}-${currentMonth}-${currentDay} 00:00`;
       let endDate = `${currentYear}-${currentMonth}-${currentDay} ${currentTime}`;
 
@@ -44,31 +145,30 @@
         `https://api.stormglass.io/v2/tide/extremes/point?lat=${lat}&lng=${lng}&start=${startDate}&end=${endDate}`,
         {
           headers: {
-            Authorization: 'd1ed9770-9968-11ee-8b92-0242ac130002-d1ed97d4-9968-11ee-8b92-0242ac130002',
+            Authorization: '{api-key}',
           },
         }
       )
         .then((response) => response.json())
         .then((jsonData) => {
-          // only have 10 free calls per day for this api
-          // let user know that data isnt available anymore for that day, and post if it is
-          if (document.getElementById('tide_lvl').innerHTML.length == 0){
-            document.getElementById('tide_lvl').innerHTML = "Information not available <br> Try again tomorrow"
+          if (document.getElementById('tide_lvl').innerHTML.length == 0) {
+            document.getElementById('tide_lvl').innerHTML =
+              'Information not available <br> Try again tomorrow';
           } else {
             let tideData = jsonData;
-          document.getElementById('tide_lvl').innerHTML = tideData.data[1].type.toUpperCase() + ' <br> TIDES';
-
+            document.getElementById('tide_lvl').innerHTML =
+              tideData.data[1].type.toUpperCase() + ' <br> TIDES';
           }
         });
-
 
       //LEASH STATUS
       //gets current month & day to let the user know whether dogs are allowed to be off-leash
       //let the user know when the on leash season starts
 
-      // format current date to work in the checkPeakSzn function
+      // format current date to work in function
       let currentDate = currentMonth + '.' + currentDay;
-      // test if current month and date are in peak season or off season to determine o/off-leash status and any other relavent information for the user
+
+      // test if current month and date are in peak season or off season to determine o/off-leash status
       function checkPeakSzn() {
         if (currentDate > 5.16 && currentDate < 8.4) {
           document.getElementById('leashStatus').innerHTML =
@@ -79,12 +179,11 @@
         }
       }
       checkPeakSzn();
-
     </script>
     <script
       async
       defer
-      src="https://maps.googleapis.com/maps/api/js?key={api key}&callback=initMap"
+      src="https://maps.googleapis.com/maps/api/js?key={api-key}&callback=initMap"
     ></script>
   </body>
 </html>
